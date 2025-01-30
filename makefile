@@ -2,7 +2,7 @@ AWS_REGION := us-east-1
 STACK_NAME := CognitoErgoSumTest
 ENV_FILE := .env
 
-up: tests/test-stack.yml 
+up: tests/test-stack.yml
 	cfn-lint $< 
 	aws cloudformation deploy --capabilities CAPABILITY_IAM CAPABILITY_AUTO_EXPAND \
 	--template-file $< \
@@ -12,7 +12,7 @@ down:
 	aws cloudformation delete-stack \
 	--stack-name $(STACK_NAME) --region $(AWS_REGION)
 
-.env: 
+.env: tests/test-stack.yml
 	aws cloudformation describe-stacks  \
 	--query 'Stacks[].Outputs[].[OutputKey,OutputValue]' \
     --stack-name $(STACK_NAME) --region $(AWS_REGION) \

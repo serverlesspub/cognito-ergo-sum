@@ -10,6 +10,9 @@ Contributor guide
 
 # Running tests
 
+> [!TIP]
+> If you do not have a default AWS profile, make sure to provide it using the `AWS_PROFILE=something <COMMAND>` prefix.
+
 ## Creating the test stack for integration tests
 
 To create the test cfn stack, run:
@@ -30,15 +33,17 @@ To create the .env file required by tests, run:
 make .env
 ```
 
+## Install dependencies
+
+Run the npm install command:
+
+```
+npm i
+```
+
 ## Run JEST
 
-On Node 22 and later, you can just run
-
-```
-npm t
-```
-
-For earlier versions, you may need to load modules:
+Run:
 
 ```
 NODE_OPTIONS="--experimental-vm-modules" npm t

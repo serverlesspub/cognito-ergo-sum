@@ -4,6 +4,8 @@ Transform: AWS::Serverless-2016-10-31
 Resources:
   UserPool:
     Type: "AWS::Cognito::UserPool"
+    DeletionPolicy: Delete
+    UpdateReplacePolicy: Delete
     Properties:
       AutoVerifiedAttributes:
         - email
@@ -82,77 +84,6 @@ Resources:
       LogoutURLs:
         - !Sub "http://localhost/auth/logout/"
 
-
-  IdentityPool:
-    Type: "AWS::Cognito::IdentityPool"
-    Properties:
-      AllowUnauthenticatedIdentities: true
-      CognitoIdentityProviders:
-        - ClientId: !Ref WebAppClient
-          ProviderName: !GetAtt UserPool.ProviderName
-
-          #  CognitoUnAuthorizedRole:
-          #    Type: "AWS::IAM::Role"
-          #    Properties:
-          #      AssumeRolePolicyDocument:
-          #        Version: "2012-10-17"
-          #        Statement:
-          #          - Effect: "Allow"
-          #            Principal:
-          #              Federated: "cognito-identity.amazonaws.com"
-          #            Action:
-          #              - "sts:AssumeRoleWithWebIdentity"
-          #            Condition:
-          #              StringEquals:
-          #                "cognito-identity.amazonaws.com:aud": !Ref IdentityPool
-          #              "ForAnyValue:StringLike":
-          #                "cognito-identity.amazonaws.com:amr": unauthenticated
-          #      Policies:
-          #        - PolicyName: "CognitoUnauthorizedPolicy"
-          #          PolicyDocument:
-          #            Version: "2012-10-17"
-          #            Statement:
-          #              - Effect: "Allow"
-          #                Action:
-          #                  - "cognito-sync:*"
-          #                  - "mobileanalytics:PutEvents"
-          #                Resource: "*"
-          #  CognitoAuthorizedRole:
-          #    Type: "AWS::IAM::Role"
-          #    Properties:
-          #      AssumeRolePolicyDocument:
-          #        Version: "2012-10-17"
-          #        Statement:
-          #          - Effect: "Allow"
-          #            Principal:
-          #              Federated: "cognito-identity.amazonaws.com"
-          #            Action:
-          #              - "sts:AssumeRoleWithWebIdentity"
-          #            Condition:
-          #              StringEquals:
-          #                "cognito-identity.amazonaws.com:aud": !Ref IdentityPool
-          #              "ForAnyValue:StringLike":
-          #                "cognito-identity.amazonaws.com:amr": authenticated
-          #      Policies:
-          #        - PolicyName: "CognitoAuthorizedPolicy"
-          #          PolicyDocument:
-          #            Version: "2012-10-17"
-          #            Statement:
-          #              - Effect: "Allow"
-          #                Action:
-          #                  - "cognito-sync:*"
-          #                  - "cognito-identity:*"
-          #                Resource: "*"
-          #
-          #  IdentityPoolRoleMapping:
-          #    Type: "AWS::Cognito::IdentityPoolRoleAttachment"
-          #    Properties:
-          #      IdentityPoolId: !Ref IdentityPool
-          #      Roles:
-          #        authenticated: !GetAtt CognitoAuthorizedRole.Arn
-          #        unauthenticated: !GetAtt CognitoUnAuthorizedRole.Arn
-          #
-
 Outputs:
   UserPoolId:
     Description: User pool ID
@@ -160,5 +91,3 @@ Outputs:
   WebAppClientId:
     Description: User pool client ID for the web app
     Value: !Ref WebAppClient
-  IdentityPoolId:
-    Value: !Ref IdentityPool
