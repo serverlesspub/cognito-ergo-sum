@@ -2,13 +2,12 @@
  * @jest-environment jsdom
  */
 
-import {SRPCalculator} from '../src/srp-calculator';
-import {getRandomValues, randomUUID } from 'node:crypto';
-import util from 'node:util';
 import {CognitoIdentityProvider, PasswordHistoryPolicyViolationException, NotAuthorizedException, InvalidPasswordException, AdminCreateUserCommand, AdminInitiateAuthCommand, AdminDeleteUserCommand, AdminRespondToAuthChallengeCommand} from '@aws-sdk/client-cognito-identity-provider';
-import {TokenParser} from './token-parser';
+import {SRPCalculator} from '../src/srp-calculator';
 import {CognitoAuthSession} from '../src/cognito-auth-session';
-
+import {TokenParser} from './token-parser';
+import {NodeRuntime} from './node-runtime';
+import {randomUUID} from 'node:crypto';
 const clientId = process.env.WebAppClientId,
 	userPoolId = process.env.UserPoolId;
 
@@ -67,19 +66,7 @@ describe('CognitoAuthSession', () => {
 	beforeEach(() => {
 		const [region, userPoolName] = userPoolId.split('_');
 		cognitoIdentityServiceProvider = new CognitoIdentityProvider({region});
-		runtime = {
-			decodeBase64: global.atob,
-			randomArray: (numBytes) => {
-				return getRandomValues(new Uint8Array(numBytes));
-			},
-			encodeUTF8StringToBinary: (input) => {
-				return new util.TextEncoder().encode(input);
-			},
-			bufferEncodeBase64: (buffer) => {
-				const bytes = new Uint8Array(buffer);
-				return btoa(String.fromCharCode(...bytes));
-			}
-		};
+		runtime = new NodeRuntime();
 		username = randomUUID();
 		tokenParser = new TokenParser({runtime});
 		authSession = new CognitoAuthSession({
