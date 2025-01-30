@@ -1,0 +1,45 @@
+Contributor guide
+
+# Prerequisites 
+
+- AWS command line tools
+- cfn-lint
+- node 20 or later
+- gnu make
+
+
+# Running tests
+
+## Creating the test stack for integration tests
+
+To create the test cfn stack, run:
+
+```
+make up
+``` 
+
+You can optionally specify a different test stack name and AWS region
+
+```
+make up AWS_REGION=us-west-1 STACK_NAME=MyTestStack
+```
+
+To create the .env file required by tests, run:
+
+```
+make .env
+```
+
+## Run JEST
+
+On Node 22 and later, you can just run
+
+```
+npm t
+```
+
+For earlier versions, you may need to load modules:
+
+```
+NODE_OPTIONS="--experimental-vm-modules" npm t
+```

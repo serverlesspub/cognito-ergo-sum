@@ -1,0 +1,164 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Cognito Ergo Sum Test Stack
+Transform: AWS::Serverless-2016-10-31
+Resources:
+  UserPool:
+    Type: "AWS::Cognito::UserPool"
+    Properties:
+      AutoVerifiedAttributes:
+        - email
+      AliasAttributes:
+        - email
+        - preferred_username
+      MfaConfiguration: "OFF"
+      Schema:
+        - Name: name
+          AttributeDataType: String
+          StringAttributeConstraints:
+            MinLength: "1"
+            MaxLength: "2048"
+          Mutable: true
+          Required: true
+        - Name: preferred_username
+          AttributeDataType: String
+          StringAttributeConstraints:
+            MinLength: "1"
+            MaxLength: "40"
+          Mutable: true
+          Required: false
+        - Name: email
+          AttributeDataType: String
+          Mutable: true
+          Required: true
+        - Name: email_verified
+          AttributeDataType: Boolean
+          DeveloperOnlyAttribute: false
+          Required: false
+          Mutable: true
+        - Name: sub
+          AttributeDataType: String
+          StringAttributeConstraints:
+            MinLength: "1"
+            MaxLength: "2048"
+          Mutable: false
+          Required: true
+      DeviceConfiguration:
+        ChallengeRequiredOnNewDevice: true
+        DeviceOnlyRememberedOnUserPrompt: false
+      UsernameConfiguration:
+        CaseSensitive: False
+      UserPoolTier: LITE
+
+  WebAppClient:
+    Type: "AWS::Cognito::UserPoolClient"
+    Properties:
+      GenerateSecret: false
+      UserPoolId: !Ref UserPool
+      PreventUserExistenceErrors: 'ENABLED'
+      RefreshTokenValidity: 30
+      ReadAttributes:
+        - name
+        - email
+      WriteAttributes:
+        - name
+        - email
+      SupportedIdentityProviders:
+        - COGNITO
+      AllowedOAuthFlows:
+        - implicit
+        - code
+      AllowedOAuthFlowsUserPoolClient: True
+      AllowedOAuthScopes:
+        - profile
+        - openid
+        - aws.cognito.signin.user.admin
+      ExplicitAuthFlows:
+        - ALLOW_ADMIN_USER_PASSWORD_AUTH
+        - ALLOW_REFRESH_TOKEN_AUTH
+        - ALLOW_USER_SRP_AUTH
+      CallbackURLs:
+        - !Sub "http://localhost/auth/login/"
+        - !Sub "http://localhost/auth/openid/"
+      LogoutURLs:
+        - !Sub "http://localhost/auth/logout/"
+
+
+  IdentityPool:
+    Type: "AWS::Cognito::IdentityPool"
+    Properties:
+      AllowUnauthenticatedIdentities: true
+      CognitoIdentityProviders:
+        - ClientId: !Ref WebAppClient
+          ProviderName: !GetAtt UserPool.ProviderName
+
+          #  CognitoUnAuthorizedRole:
+          #    Type: "AWS::IAM::Role"
+          #    Properties:
+          #      AssumeRolePolicyDocument:
+          #        Version: "2012-10-17"
+          #        Statement:
+          #          - Effect: "Allow"
+          #            Principal:
+          #              Federated: "cognito-identity.amazonaws.com"
+          #            Action:
+          #              - "sts:AssumeRoleWithWebIdentity"
+          #            Condition:
+          #              StringEquals:
+          #                "cognito-identity.amazonaws.com:aud": !Ref IdentityPool
+          #              "ForAnyValue:StringLike":
+          #                "cognito-identity.amazonaws.com:amr": unauthenticated
+          #      Policies:
+          #        - PolicyName: "CognitoUnauthorizedPolicy"
+          #          PolicyDocument:
+          #            Version: "2012-10-17"
+          #            Statement:
+          #              - Effect: "Allow"
+          #                Action:
+          #                  - "cognito-sync:*"
+          #                  - "mobileanalytics:PutEvents"
+          #                Resource: "*"
+          #  CognitoAuthorizedRole:
+          #    Type: "AWS::IAM::Role"
+          #    Properties:
+          #      AssumeRolePolicyDocument:
+          #        Version: "2012-10-17"
+          #        Statement:
+          #          - Effect: "Allow"
+          #            Principal:
+          #              Federated: "cognito-identity.amazonaws.com"
+          #            Action:
+          #              - "sts:AssumeRoleWithWebIdentity"
+          #            Condition:
+          #              StringEquals:
+          #                "cognito-identity.amazonaws.com:aud": !Ref IdentityPool
+          #              "ForAnyValue:StringLike":
+          #                "cognito-identity.amazonaws.com:amr": authenticated
+          #      Policies:
+          #        - PolicyName: "CognitoAuthorizedPolicy"
+          #          PolicyDocument:
+          #            Version: "2012-10-17"
+          #            Statement:
+          #              - Effect: "Allow"
+          #                Action:
+          #                  - "cognito-sync:*"
+          #                  - "cognito-identity:*"
+          #                Resource: "*"
+          #
+          #  IdentityPoolRoleMapping:
+          #    Type: "AWS::Cognito::IdentityPoolRoleAttachment"
+          #    Properties:
+          #      IdentityPoolId: !Ref IdentityPool
+          #      Roles:
+          #        authenticated: !GetAtt CognitoAuthorizedRole.Arn
+          #        unauthenticated: !GetAtt CognitoUnAuthorizedRole.Arn
+          #
+
+Outputs:
+  UserPoolId:
+    Description: User pool ID
+    Value: !Ref UserPool
+  WebAppClientId:
+    Description: User pool client ID for the web app
+    Value: !Ref WebAppClient
+  IdentityPoolId:
+    Value: !Ref IdentityPool

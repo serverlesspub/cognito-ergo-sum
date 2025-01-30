@@ -1,0 +1,38 @@
+{
+  "name": "cognito-ergo-sum",
+  "type": "module",
+  "version": "1.0.0",
+  "main": "src/cognito-auth-session.mjs",
+  "scripts": {
+    "test": "jest",
+    "pretest": "eslint ."
+  },
+  "jest": {
+    "roots": [
+      "<rootDir>/tests/"
+    ],
+    "globalSetup": "./tests/init.mjs",
+    "testTimeout": 20000,
+	"moduleFileExtensions": ["js", "mjs", "ts"],
+	"testMatch": ["<rootDir>/tests/*.test.js", "<rootDir>/tests/*.test.mjs"]
+  },
+  "author": "Gojko Adzic <gojko@gojko.com>, Slobodan",
+  "contributors": [
+    "Slobodan Stojanovic <slobodan@cloudhorizon.com> (https://slobodan.me)",
+    "Gojko Adzic <gojko@gojko.com> (https://gojko.net)"
+  ],
+  "license": "APACHE-2.0",
+  "description": "Minimal AWS Cognito authentication SRP workflow implementation, replacing outdated cognito-identity-js",
+  "dependencies": {
+    "@aws-sdk/client-cognito-identity-provider": "^3.738.0"
+  },
+  "devDependencies": {
+    "@eslint/eslintrc": "^3.2.0",
+    "@eslint/js": "^9.19.0",
+    "dotenv": "^16.4.7",
+    "eslint": "^9.19.0",
+    "globals": "^15.14.0",
+    "jest": "^29.7.0",
+    "jest-environment-jsdom": "^29.7.0"
+  }
+}
