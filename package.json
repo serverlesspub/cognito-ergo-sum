@@ -2,7 +2,7 @@
   "name": "cognito-ergo-sum",
   "type": "module",
   "version": "1.0.0",
-  "main": "src/cognito-auth-session.mjs",
+  "main": "src/cognito-auth-session.js",
   "scripts": {
     "test": "jest",
     "pretest": "eslint ."
@@ -11,10 +11,8 @@
     "roots": [
       "<rootDir>/tests/"
     ],
-    "globalSetup": "./tests/init.mjs",
-    "testTimeout": 20000,
-	"moduleFileExtensions": ["js", "mjs", "ts"],
-	"testMatch": ["<rootDir>/tests/*.test.js", "<rootDir>/tests/*.test.mjs"]
+    "globalSetup": "./tests/init.js",
+    "testTimeout": 20000
   },
   "author": "Gojko Adzic <gojko@gojko.com>, Slobodan",
   "contributors": [
