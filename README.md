@@ -11,7 +11,9 @@ but without all the other stuff that Amplify brings along.
 
 Developed by AWS Heroes [Slobodan Stojanović](https://aws.amazon.com/developer/community/heroes/slobodan-stojanovic/) and [Gojko Adzic](https://aws.amazon.com/developer/community/heroes/gojko-adzic/). 
 
-Status: Work in progress
+## Status
+
+Work in progress - basic username/password authentication works, but custom flows are not yet supported.
 
 ## Differences from amazon-cognito-identity-js and Amplify JS
 
