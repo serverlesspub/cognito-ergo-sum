@@ -1,5 +1,5 @@
 import {InitiateAuthCommand, RespondToAuthChallengeCommand, PasswordHistoryPolicyViolationException} from '@aws-sdk/client-cognito-identity-provider';
-import {BigInteger} from '../external/jsbn';
+import {BigIntegerAdapter as BigInteger} from './biginteger-adapter';
 import {formatTimestampForCognitoChallenge} from './format-timestamp-for-cognito-challenge';
 
 export function CognitoAuthSession({client, userPoolName, srpCalculator, clientId, clock = Date}) {

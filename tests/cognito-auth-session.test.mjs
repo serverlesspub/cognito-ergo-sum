@@ -1,6 +1,6 @@
 import { InitiateAuthCommand, RespondToAuthChallengeCommand, NotAuthorizedException, PasswordHistoryPolicyViolationException, InvalidPasswordException, InvalidParameterException } from '@aws-sdk/client-cognito-identity-provider';
 import {CognitoAuthSession} from '../src/cognito-auth-session';
-import {BigInteger} from  '../external/jsbn';
+import {BigIntegerAdapter as BigInteger} from  '../src/biginteger-adapter';
 import {jest} from '@jest/globals'; //eslint-disable-line no-shadow
 
 describe('CognitoAuthSession', () => {
@@ -36,7 +36,7 @@ describe('CognitoAuthSession', () => {
 		test('should initiate authentication', async () => {
 			client.send.mockResolvedValueOnce({
 				ChallengeName: 'PASSWORD_VERIFIER',
-				ChallengeParameters: {USERNAME: 'responseUsername', SECRET_BLOCK: 'mockSecretBlock', SRP_B: 'mockB', SALT: 'mockSalt' }
+				ChallengeParameters: {USERNAME: 'responseUsername', SECRET_BLOCK: 'mockSecretBlock', SRP_B: 'BB1122', SALT: 'CCAA11' }
 			});
 			await underTest.authenticate({ username: 'testUser', password: 'testPass' });
 			const firstSendArg = client.send.mock.calls[0][0];
@@ -101,8 +101,8 @@ describe('CognitoAuthSession', () => {
 				expect(srpCalculator.getPasswordAuthenticationKey).toHaveBeenCalledWith(
 					{
 						password: 'testPass',
-						salt: new BigInteger('CCCCCCCC', 16),
-						serverBValue: new BigInteger('BBBBBBBB', 16),
+						salt: expect.objectContaining({value: BigInt('0xCCCCCCCC')}),
+						serverBValue: expect.objectContaining({value: BigInt('0xBBBBBBBB')}),
 						userPoolName: 'testPool',
 						username: 'responseUsername',
 					},
@@ -140,7 +140,7 @@ describe('CognitoAuthSession', () => {
 		beforeEach(async () => {
 			client.send.mockResolvedValueOnce({
 				ChallengeName: 'PASSWORD_VERIFIER',
-				ChallengeParameters: {USERNAME: 'responseUsername', SECRET_BLOCK: 'mockSecretBlock', SRP_B: 'mockB', SALT: 'mockSalt' }
+				ChallengeParameters: {USERNAME: 'responseUsername', SECRET_BLOCK: 'mockSecretBlock', SRP_B: 'BB1122', SALT: 'CCAA11' }
 			});
 			client.send.mockResolvedValueOnce({
 				ChallengeName: 'NEW_PASSWORD_REQUIRED',
@@ -186,7 +186,7 @@ describe('CognitoAuthSession', () => {
 		test('should return tokens from the last authentication response', async () => {
 			client.send.mockResolvedValueOnce({
 				ChallengeName: 'PASSWORD_VERIFIER',
-				ChallengeParameters: {USERNAME: 'responseUsername', SECRET_BLOCK: 'mockSecretBlock', SRP_B: 'mockB', SALT: 'mockSalt' }
+				ChallengeParameters: {USERNAME: 'responseUsername', SECRET_BLOCK: 'mockSecretBlock', SRP_B: 'BB1122', SALT: 'CCAA11' }
 			});
 			client.send.mockResolvedValueOnce({
 				AuthenticationResult: {
@@ -219,7 +219,7 @@ describe('CognitoAuthSession', () => {
 			beforeEach(() => {
 				client.send.mockResolvedValueOnce({
 					ChallengeName: 'PASSWORD_VERIFIER',
-					ChallengeParameters: {USERNAME: 'responseUsername', SECRET_BLOCK: 'mockSecretBlock', SRP_B: 'mockB', SALT: 'mockSalt' }
+					ChallengeParameters: {USERNAME: 'responseUsername', SECRET_BLOCK: 'mockSecretBlock', SRP_B: 'BB1122', SALT: 'CCAA11' }
 				});
 				client.send.mockResolvedValueOnce({
 					ChallengeName: 'NEW_PASSWORD_REQUIRED',
@@ -286,7 +286,7 @@ describe('CognitoAuthSession', () => {
 			beforeEach(() => {
 				client.send.mockResolvedValueOnce({
 					ChallengeName: 'PASSWORD_VERIFIER',
-					ChallengeParameters: {USERNAME: 'responseUsername', SECRET_BLOCK: 'mockSecretBlock', SRP_B: 'mockB', SALT: 'mockSalt' }
+					ChallengeParameters: {USERNAME: 'responseUsername', SECRET_BLOCK: 'mockSecretBlock', SRP_B: 'BB1122', SALT: 'CCAA11' }
 				});
 				client.send.mockResolvedValueOnce({
 					AuthenticationResult: {

@@ -1,5 +1,5 @@
 import {Sha256} from '@aws-crypto/sha256-js';
-import {BigInteger} from '../external/jsbn';
+import {BigIntegerAdapter as BigInteger} from './biginteger-adapter';
 import {shortToHex, hexToShort} from './precalculate-hex-tables';
 const INIT_N = 'FFFFFFFFFFFFFFFFC90FDAA22168C234C4C6628B80DC1CD1' +
 	'29024E088A67CC74020BBEA63B139B22514A08798E3404DD' +
