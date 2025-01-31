@@ -1,4 +1,8 @@
 - add demo web page showing how to use the code client-side
-- replace jsbn with BigInt
 - support custom workflow challenges
 - publish to npm
+
+## done
+
+- [x] replace jsbn with BigInt
+
