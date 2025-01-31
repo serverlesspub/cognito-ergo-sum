@@ -1,6 +1,6 @@
 import { InitiateAuthCommand, RespondToAuthChallengeCommand, NotAuthorizedException, PasswordHistoryPolicyViolationException, InvalidPasswordException, InvalidParameterException } from '@aws-sdk/client-cognito-identity-provider';
 import {CognitoAuthSession} from '../src/cognito-auth-session';
-import {BigIntegerAdapter as BigInteger} from  '../src/biginteger-adapter';
+import {parseBigInt} from '../src/parse-bigint';
 import {jest} from '@jest/globals'; //eslint-disable-line no-shadow
 
 describe('CognitoAuthSession', () => {
@@ -16,7 +16,7 @@ describe('CognitoAuthSession', () => {
 			now: jest.fn(),
 		};
 		srpContextMock = {
-			A: new BigInteger('AAAAAA', 16)
+			A: parseBigInt('AAAAAA', 16)
 		};
 		srpCalculator = {
 			initContext: jest.fn(() => srpContextMock),
@@ -101,8 +101,8 @@ describe('CognitoAuthSession', () => {
 				expect(srpCalculator.getPasswordAuthenticationKey).toHaveBeenCalledWith(
 					{
 						password: 'testPass',
-						salt: expect.objectContaining({value: BigInt('0xCCCCCCCC')}),
-						serverBValue: expect.objectContaining({value: BigInt('0xBBBBBBBB')}),
+						salt: BigInt('0xCCCCCCCC'),
+						serverBValue: BigInt('0xBBBBBBBB'),
 						userPoolName: 'testPool',
 						username: 'responseUsername',
 					},

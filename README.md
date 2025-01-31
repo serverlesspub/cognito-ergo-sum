@@ -12,3 +12,11 @@ but without all the other stuff that Amplify brings along.
 Developed by AWS Heroes [Slobodan Stojanović](https://aws.amazon.com/developer/community/heroes/slobodan-stojanovic/) and [Gojko Adzic](https://aws.amazon.com/developer/community/heroes/gojko-adzic/). 
 
 Status: Work in progress
+
+## Differences from amazon-cognito-identity-js and Amplify JS
+
+- minimal dependencies - the only runtime dependency is AWS Cognito IDP SDK
+- focuses only on the authentication flow, without bundling in token caching, UI widgets... 
+- uses [JS platform BigInt](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/BigInt) object, widely available in all modern browsers, instead of the legacy BigInteger implementation from JSBN
+- uses a much faster method for modPow (completes at 20% time compared to legacy BigInteger, 8% of time compared to standard BigInt methods)
+

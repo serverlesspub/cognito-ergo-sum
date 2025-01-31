@@ -1,8 +1,9 @@
 import {Sha256} from '@aws-crypto/sha256-js';
-import {BigIntegerAdapter as BigInteger} from './biginteger-adapter';
 import {shortToHex, hexToShort} from './precalculate-hex-tables';
 import {getPaddedHex} from './get-padded-hex';
-import precalculatedN from './precalculated-n'; 
+import precalculatedN from './precalculated-n';
+import {modPow} from './modpow';
+import {parseBigInt} from './parse-bigint';
 export function SRPCalculator({runtime}) {
 	const getSha256Digest = (secret, data) => {
 			const awsCryptoHash = new Sha256(secret);
@@ -46,23 +47,25 @@ export function SRPCalculator({runtime}) {
 		},
 		getHashFromHex = (hexStr) => getHashFromData(getBytesFromHex(hexStr)),
 		calculateA = ({a, g, N}) => {
-			const A = g.modPow(a, N, () => {});
-			if (A.mod(N).equals(BigInteger.ZERO)) {
-				throw new Error('Illegal parameter. A mod N cannot be 0.');
+			const A = modPow(g, a, N);
+			if (A % N === 0n) {
+				throw new TypeError('Illegal parameter. A mod N cannot be 0.');
 			}
 			return A;
 		},
 		calculateS = ({a, g, k, x, B, N, U}) => {
-			const outerResult = g.modPow(x, N, () => {}),
-				innerResult = B.subtract(k.multiply(outerResult)).modPow(a.add(U.multiply(x)), N, () => {});
-			return innerResult.mod(N);
+			const outerResult = modPow(g, x, N),
+				base = B - (k * outerResult),
+				exponent = a + (U * x),
+				innerResult = modPow(base, exponent, N);
+			return innerResult % N;
 		},
 		calculateU = ({A, B}) => {
-			const U = new BigInteger(
+			const U = parseBigInt(
 				getHashFromHex(getPaddedHex(A) + getPaddedHex(B)),
 				16,
 			);
-			if (U.equals(BigInteger.ZERO)) {
+			if (U === 0n) {
 				throw new Error('U cannot be zero.');
 			}
 			return U;
@@ -71,14 +74,14 @@ export function SRPCalculator({runtime}) {
 			// This will be interpreted as a postive 128-bit integer
 			const hexRandom = getHexFromBytes(runtime.randomArray(128));
 			// There is no need to do randomBigInt.mod(this.N - 1) as N (3072-bit) is > 128 bytes (1024-bit)
-			return new BigInteger(hexRandom, 16);
+			return parseBigInt(hexRandom, 16);
 		},
 		initContext = () => {
-			const N = new BigInteger(precalculatedN, 16),
-				g = new BigInteger('2', 16),
+			const N = parseBigInt(precalculatedN, 16),
+				g = 2n,
 				a = generateRandomBigInteger(),
 				A = calculateA({a, g, N}),
-				k = new BigInteger(
+				k = parseBigInt(
 					getHashFromHex(`${getPaddedHex(N)}${getPaddedHex(g)}`),
 					16,
 				);
@@ -136,20 +139,20 @@ export function SRPCalculator({runtime}) {
 
 			return signatureString;
 		},
+		calculateX = ({username, password, salt, userPoolName}) => {
+			const usernamePassword = `${userPoolName}${username}:${password}`,
+				usernamePasswordHash = getHashFromData(usernamePassword);
+			return parseBigInt(
+				getHashFromHex(getPaddedHex(salt) + usernamePasswordHash),
+				16,
+			);
+		},
 		getPasswordAuthenticationKey = ({username, password, serverBValue, salt, userPoolName}, context) => {
-			if (serverBValue.mod(context.N).equals(BigInteger.ZERO)) {
-				throw new Error('B cannot be zero.');
+			if ((serverBValue % context.N) === 0) {
+				throw new Error('B mod N cannot be zero.');
 			}
-			const calculateX = () => {
-					const usernamePassword = `${userPoolName}${username}:${password}`,
-						usernamePasswordHash = getHashFromData(usernamePassword);
-					return new BigInteger(
-						getHashFromHex(getPaddedHex(salt) + usernamePasswordHash),
-						16,
-					);
-				},
-				serverContext = Object.assign({B: serverBValue}, context),
-				expandedContext = Object.assign(serverContext, {U: calculateU(serverContext), x: calculateX()});
+			const serverContext = Object.assign({B: serverBValue}, context),
+				expandedContext = Object.assign(serverContext, {U: calculateU(serverContext), x: calculateX({username, password, salt, userPoolName})});
 
 			return getHkdfKey(
 				getBytesFromHex(getPaddedHex(calculateS(expandedContext))),

@@ -20,9 +20,13 @@
     "Gojko Adzic <gojko@gojko.com> (https://gojko.net)"
   ],
   "license": "APACHE-2.0",
-  "description": "Minimal AWS Cognito authentication SRP workflow implementation, replacing outdated cognito-identity-js",
+  "description": "Minimal AWS Cognito authentication SRP workflow implementation, replacing outdated amazon-cognito-identity-js",
   "dependencies": {
     "@aws-sdk/client-cognito-identity-provider": "^3.738.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/serverlesspub/cognito-ergo-sum.git"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.2.0",
@@ -32,5 +36,13 @@
     "globals": "^15.14.0",
     "jest": "^29.7.0",
     "jest-environment-jsdom": "^29.7.0"
-  }
+  },
+  "keywords": [
+    "amazon",
+    "aws",
+    "cognito",
+    "identity",
+    "srp",
+    "secure-remote-password"
+  ]
 }

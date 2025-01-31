@@ -1,7 +1,7 @@
 import {modPow} from '../src/modpow';
 import {parseBigInt} from '../src/parse-bigint';
-import {BigInteger} from '../external/jsbn';
-import precalculatedN from '../src/precalculated-n'; 
+import {BigInteger} from './jsbn';
+import precalculatedN from '../src/precalculated-n';
 
 describe('modPow', () => {
 	test('should compute modular exponentiation correctly', () => {
@@ -37,7 +37,7 @@ describe('modPow', () => {
 				mod = 'ffffffffffffffffc90fdaa22168c234c4c6628b80dc1cd129024e088a67cc74020bbea63b139b22514a08798e3404ddef9519b3cd3a431b302b0a6df25f14374fe1356d6d51c245e485b576625e7ec6f44c42e9a637ed6b0bff5cb6f406b7edee386bfb5a899fa5ae9f24117c4b1fe649286651ece45b3dc2007cb8a163bf0598da48361c55d39a69163fa8fd24cf5f83655d23dca3ad961c62f356208552bb9ed529077096966d670c354e4abc9804f1746c08ca18217c32905e462e36ce3be39e772c180e86039b2783a2ec07a28fb5c55df06f4c52c9de2bcbf6955817183995497cea956ae515d2261898fa051015728e5a8aaac42dad33170d04507a33a85521abdf1cba64ecfb850458dbef0a8aea71575d060c7db3970f85a6e1e4c7abf5ae8cdb0933d71e8c94e04a25619dcee3d2261ad2ee6bf12ffa06d98a0864d87602733ec86a64521f2b18177b200cbbe117577a615d6c770988c0bad946e208e24fa074e5ab3143db5bfce0fd108e4b82d120a93ad2caffffffffffffffff';
 			expect(modPow(parseBigInt(base, 16), parseBigInt(exponent, 16), parseBigInt(mod, 16)).toString(16)).toEqual(new BigInteger(base, 16).modPow(new BigInteger(exponent, 16), new BigInteger(mod, 16), () => {}).toString(16));
 			expect(modPow(parseBigInt('-' + base, 16), parseBigInt(exponent, 16), parseBigInt(mod, 16)).toString(16)).toEqual(new BigInteger('-' + base, 16).modPow(new BigInteger(exponent, 16), new BigInteger(mod, 16), () => {}).toString(16));
-		});		
+		});
 
 		test('works differently for odd modulus numbers - but this is not important as SRP always calculates modululus for precalculated N which is a prime', () => {
 			const base = '87c0c', exponent = '1bb', mod = '27bdc';
@@ -45,7 +45,7 @@ describe('modPow', () => {
 			expect(modPow(parseBigInt(base, 16), parseBigInt(exponent, 16), parseBigInt(mod, 16)).toString(16)).not.toEqual(new BigInteger(base, 16).modPow(new BigInteger(exponent, 16), new BigInteger(mod, 16), () => {}).toString(16));
 
 		});
-		
+
 	});
 
 	describe('Performance and accuracy smoke test', () => {
@@ -73,8 +73,8 @@ describe('modPow', () => {
 		test('modPow correctness against JSBN calculations for precalculated SRP modulus - the library seems to work differently for odd moduluses, but this is not relevant for SRP as it always mods with a prime number', () => {
 			for (const { base, exponent } of testCases) {
 				const modulus = parseBigInt(precalculatedN, 16),
-					jsbnBase = new BigInteger(base.toString(16), 16), 
-					jsbnExponent = new BigInteger(exponent.toString(16), 16), 
+					jsbnBase = new BigInteger(base.toString(16), 16),
+					jsbnExponent = new BigInteger(exponent.toString(16), 16),
 					jsbnModulus = new BigInteger(precalculatedN, 16),
 					expected = jsbnBase.modPow(jsbnExponent, jsbnModulus, () => {}),
 					result = modPow(base, exponent, modulus);
@@ -94,8 +94,8 @@ describe('modPow', () => {
 					bigIntResults = testCases.map(({ base, exponent, modulus }) => base ** exponent % modulus);
 				}),
 				jsbnCases = testCases.map(({base, exponent, modulus}) => ({
-					base: new BigInteger(base.toString(16), 16), 
-					exponent: new BigInteger(exponent.toString(16), 16), 
+					base: new BigInteger(base.toString(16), 16),
+					exponent: new BigInteger(exponent.toString(16), 16),
 					modulus: new BigInteger(modulus.toString(16), 16)
 				})),
 				jsbnTime = measureTime(() => {

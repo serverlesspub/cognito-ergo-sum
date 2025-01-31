@@ -1,5 +1,5 @@
 import {InitiateAuthCommand, RespondToAuthChallengeCommand, PasswordHistoryPolicyViolationException} from '@aws-sdk/client-cognito-identity-provider';
-import {BigIntegerAdapter as BigInteger} from './biginteger-adapter';
+import {parseBigInt} from './parse-bigint';
 import {formatTimestampForCognitoChallenge} from './format-timestamp-for-cognito-challenge';
 
 export function CognitoAuthSession({client, userPoolName, srpCalculator, clientId, clock = Date}) {
@@ -41,8 +41,8 @@ export function CognitoAuthSession({client, userPoolName, srpCalculator, clientI
 		},
 		continueWithPasswordVerifier = async () => {
 			const lastChallengeParameters = lastAuthResponse?.ChallengeParameters,
-				serverBValue = new BigInteger(lastChallengeParameters.SRP_B, 16),
-				salt = new BigInteger(lastChallengeParameters.SALT, 16),
+				serverBValue = parseBigInt(lastChallengeParameters.SRP_B, 16),
+				salt = parseBigInt(lastChallengeParameters.SALT, 16),
 				dateNow = formatTimestampForCognitoChallenge(clock.now()),
 				hkdf = srpCalculator.getPasswordAuthenticationKey({
 					username: lastChallengeParameters.USERNAME,

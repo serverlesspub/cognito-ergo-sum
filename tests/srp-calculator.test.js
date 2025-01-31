@@ -1,6 +1,6 @@
 import {SRPCalculator} from '../src/srp-calculator';
 import {NodeRuntime} from './node-runtime';
-import {BigIntegerAdapter} from '../src/biginteger-adapter';
+import {parseBigInt} from '../src/parse-bigint';
 describe('SRPCalculator', () => {
 	let runtime, underTest;
 	beforeEach(() => {
@@ -79,7 +79,7 @@ describe('SRPCalculator', () => {
 				hkdf: Uint8Array.from( [ 63,  57,  68,  89, 160,  8, 88, 166, 176, 111,   2, 99, 19, 223, 133,  46 ]),
 				signatureString: 'NYfEUxSZYCI2ZNg9CLedShBv3UgFywhQCulHKVCli6U='
 			}
-		].forEach(({userPoolName, username, challengeParameters, dateNow, hkdf, signatureString}, i) => 
+		].forEach(({userPoolName, username, challengeParameters, dateNow, hkdf, signatureString}, i) =>
 			test(`should be consistent with precalculated SRP regression values ${i}`, () => {
 				expect(underTest.getSignature({userPoolName, username, challengeParameters, dateNow, hkdf})).toEqual(signatureString);
 			})
@@ -100,8 +100,8 @@ describe('SRPCalculator', () => {
 					A: '5159b4cfc91b8f2dee1f1fda35582edfd62150d757fbbf25dd1cf4346932271a4cab6ae7a9f04f9262ba42218d9b94218e620e29787d44e169226879f3fb3f226aabc054a1a47fb31d8200c2b7d15c0f27c1e0dc39cfd2b8fd59aa98faea96c4f464c9a4ffecee0cbe72ec4c7a6730fee5aee46b7b04bb720e638fd8586e7219ebd79aded6f7152460f1b9a4f411d1b90124880583d738fe8db55dfe23b1a4c88b6b4f2e4cee235ffad4ff0380367e8e5c0fa09e37d71a89247e86f26f74d8bd5c787ab2c6496ed8fb342b6102124f47c4204387f33acdc8ac1f0b6f9514c93a5143615a07e511005b909ae3c8b6c6f3917ee4035c523ee5f659573701c234375c4064bd0a1917e07d7f9f67390409f83517938875fb56e29953d68501b5b871998a68c120b28c14b0136bb9ef485a60ca8a948382eed90500f6827de5c7eca2b3066acc3cd3982610e1e9b94cb6e1b586cf027354418763a0a0e4ddd082338bb08feec54e878fcc8ea2bc642ff552308994c449a84c23eab69fd6e0eda049ee',
 					k: '538282c4354742d7cbbde2359fcf67f9f5b3a6b08791e5011b43b8a5b66d9ee6'
 				},
-				result: [232, 3, 30, 136, 209, 145, 49, 28, 189, 97, 77, 4, 222, 140, 193, 212], 
-				
+				result: [232, 3, 30, 136, 209, 145, 49, 28, 189, 97, 77, 4, 222, 140, 193, 212],
+
 			},
 			{
 				username: '5d53e202-da19-4e2f-9028-b6cfae1519db',
@@ -118,7 +118,7 @@ describe('SRPCalculator', () => {
 					k: '538282c4354742d7cbbde2359fcf67f9f5b3a6b08791e5011b43b8a5b66d9ee6'
 				},
 				result: [15, 84, 202, 208, 197, 102, 132, 138, 250, 221, 17, 61, 80, 250, 72, 6]
-				
+
 			},
 			{
 				username: 'acc4703d-b81d-4d2b-aed8-1624c68c875d',
@@ -135,15 +135,15 @@ describe('SRPCalculator', () => {
 					k: '538282c4354742d7cbbde2359fcf67f9f5b3a6b08791e5011b43b8a5b66d9ee6'
 				},
 				result: [174, 95, 119, 186, 160, 28, 17, 196, 56, 87, 115, 34, 23, 181, 58, 251]
-				
+
 			}
 		].forEach(({username, password, serverBValue, salt, userPoolName, result, context}, i) => {
 			test(`should be consistent with precalculated SRP regression values ${i}`, () => {
 				const parsedContext = {};
-				Object.keys(context).forEach(key => parsedContext[key] = new BigIntegerAdapter(context[key], 16));
-				expect(underTest.getPasswordAuthenticationKey({username, password, serverBValue: new BigIntegerAdapter(serverBValue, 16), salt: new BigIntegerAdapter(salt, 16), userPoolName}, parsedContext)).toEqual(Uint8Array.from(result));
+				Object.keys(context).forEach(key => parsedContext[key] = parseBigInt(context[key], 16));
+				expect(underTest.getPasswordAuthenticationKey({username, password, serverBValue: parseBigInt(serverBValue, 16), salt: parseBigInt(salt, 16), userPoolName}, parsedContext)).toEqual(Uint8Array.from(result));
 			});
 		});
 	});
-	
+
 });
