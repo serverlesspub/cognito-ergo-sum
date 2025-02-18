@@ -201,4 +201,51 @@ describe('CognitoAuthSession', () => {
 			expect(authSession.getTokenType()).toBeFalsy();
 		});
 	});
+	describe('for custom authentication', () => {
+		beforeEach(async () => {
+			await createUser({password: '$Password0Final', forcePasswordChange: false});
+		});
+
+		test('should complete custom auth flow successfully', async () => {
+			await authSession.initiateCustomAuth({username});
+			expect(authSession.getNextStep()).toEqual('CUSTOM_CHALLENGE');
+			expect(authSession.getIdToken()).toBeFalsy();
+
+			await authSession.respondToCustomChallenge('42');
+			expect(authSession.getNextStep()).toBeFalsy();
+			expect(authSession.getIdToken()).toBeTruthy();
+			expect(tokenParser.parseJWT(authSession.getIdToken())).toMatchObject({
+				'cognito:username': username,
+				'iss': `https://cognito-idp.us-east-1.amazonaws.com/${userPoolId}`
+			});
+			expect(authSession.getRefreshToken()).toBeTruthy();
+			expect(authSession.getAccessToken()).toBeTruthy();
+			expect(authSession.getExpiresIn()).toEqual(3600);
+			expect(authSession.getTokenType()).toEqual('Bearer');
+		});
+
+		test('should fail with incorrect answer', async () => {
+			await authSession.initiateCustomAuth({username});
+			expect(authSession.getNextStep()).toEqual('CUSTOM_CHALLENGE');
+
+			await expect(authSession.respondToCustomChallenge('wrong answer'))
+				.rejects.toBeInstanceOf(NotAuthorizedException);
+			expect(authSession.getIdToken()).toBeFalsy();
+			expect(authSession.getRefreshToken()).toBeFalsy();
+			expect(authSession.getAccessToken()).toBeFalsy();
+		});
+
+		test('should work with email instead of username', async () => {
+			await authSession.initiateCustomAuth({username: username + '@email.com'});
+			expect(authSession.getNextStep()).toEqual('CUSTOM_CHALLENGE');
+
+			await authSession.respondToCustomChallenge('42');
+			expect(authSession.getNextStep()).toBeFalsy();
+			expect(authSession.getIdToken()).toBeTruthy();
+			expect(tokenParser.parseJWT(authSession.getIdToken())).toMatchObject({
+				'cognito:username': username,
+				'iss': `https://cognito-idp.us-east-1.amazonaws.com/${userPoolId}`
+			});
+		});
+	});
 });

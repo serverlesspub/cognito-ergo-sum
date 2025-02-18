@@ -50,6 +50,10 @@ Resources:
       UsernameConfiguration:
         CaseSensitive: False
       UserPoolTier: LITE
+      LambdaConfig:
+        CreateAuthChallenge: !GetAtt CreateAuthChallengeLambda.Arn
+        VerifyAuthChallengeResponse: !GetAtt VerifyAuthChallengeLambda.Arn
+        DefineAuthChallenge: !GetAtt DefineAuthChallengeLambda.Arn
 
   WebAppClient:
     Type: "AWS::Cognito::UserPoolClient"
@@ -78,11 +82,107 @@ Resources:
         - ALLOW_ADMIN_USER_PASSWORD_AUTH
         - ALLOW_REFRESH_TOKEN_AUTH
         - ALLOW_USER_SRP_AUTH
+        - ALLOW_CUSTOM_AUTH
       CallbackURLs:
         - !Sub "http://localhost/auth/login/"
         - !Sub "http://localhost/auth/openid/"
       LogoutURLs:
         - !Sub "http://localhost/auth/logout/"
+
+  CreateAuthChallengeLambda:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: index.handler
+      Runtime: nodejs20.x
+      InlineCode: |
+        exports.handler = async (event) => {
+          console.log('Create auth challenge triggered', event);
+          
+          // Simple challenge - just return a static code
+          event.response.publicChallengeParameters = {
+            challenge: 'What is the answer?'
+          };
+          
+          event.response.privateChallengeParameters = {
+            answer: '42'
+          };
+          
+          event.response.challengeMetadata = 'CUSTOM_CHALLENGE';
+          
+          return event;
+        };
+
+  VerifyAuthChallengeLambda:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: index.handler
+      Runtime: nodejs20.x
+      InlineCode: |
+        exports.handler = async (event) => {
+          console.log('Verify auth challenge triggered', event);
+          
+          // Compare the answer provided by the user with our stored answer
+          const expectedAnswer = event.request.privateChallengeParameters.answer;
+          const challengeAnswer = event.request.challengeAnswer;
+          
+          event.response.answerCorrect = (challengeAnswer === expectedAnswer);
+          
+          return event;
+        };
+
+  DefineAuthChallengeLambda:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: index.handler
+      Runtime: nodejs20.x
+      InlineCode: |
+        exports.handler = async (event) => {
+          console.log('Define auth challenge triggered', event);
+          
+          if (!event.request.session || event.request.session.length === 0) {
+            // First challenge
+            event.response.challengeName = 'CUSTOM_CHALLENGE';
+            event.response.issueTokens = false;
+            event.response.failAuthentication = false;
+          } else {
+            // Check if user answered correctly
+            const lastAttempt = event.request.session.slice(-1)[0];
+            if (lastAttempt.challengeResult === true) {
+              event.response.issueTokens = true;
+              event.response.failAuthentication = false;
+            } else {
+              event.response.issueTokens = false;
+              event.response.failAuthentication = true;
+            }
+          }
+          
+          return event;
+        };
+
+  # Add Lambda permissions for Cognito to invoke these functions
+  CreateAuthChallengePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref CreateAuthChallengeLambda
+      Principal: cognito-idp.amazonaws.com
+      SourceArn: !GetAtt UserPool.Arn
+
+  VerifyAuthChallengePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref VerifyAuthChallengeLambda
+      Principal: cognito-idp.amazonaws.com
+      SourceArn: !GetAtt UserPool.Arn
+
+  DefineAuthChallengePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref DefineAuthChallengeLambda
+      Principal: cognito-idp.amazonaws.com
+      SourceArn: !GetAtt UserPool.Arn
 
 Outputs:
   UserPoolId:

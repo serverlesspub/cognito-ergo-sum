@@ -118,6 +118,38 @@ export function CognitoAuthSession({client, userPoolName, srpCalculator, clientI
 				refresh: getRefreshToken(),
 				access: getAccessToken()
 			};
+		},
+		initiateCustomAuth = async ({username}) => {
+			initialRequest = {username};
+			try {
+				await processAuthCommand(new InitiateAuthCommand({
+					AuthFlow: 'CUSTOM_AUTH',
+					AuthParameters: {
+						USERNAME: username
+					},
+					ClientId: clientId
+				}));
+			} catch (e) {
+				lastAuthResponse = null;
+				throw e;
+			}
+		},
+		respondToCustomChallenge = async (answer) => {
+			const commandInput = {
+				ChallengeName: getNextStep(),
+				ChallengeResponses: {
+					USERNAME: initialRequest.username,
+					ANSWER: answer
+				},
+				ClientId: clientId,
+				Session: lastAuthResponse.Session
+			};
+			try {
+				await processAuthCommand(new RespondToAuthChallengeCommand(commandInput));
+			} catch (e) {
+				lastAuthResponse = null;
+				throw e;
+			}
 		};
 
 	Object.freeze(Object.assign(
@@ -131,5 +163,7 @@ export function CognitoAuthSession({client, userPoolName, srpCalculator, clientI
 			getExpiresIn,
 			getTokenType,
 			getTokens,
+			initiateCustomAuth,
+			respondToCustomChallenge
 		}));
 };
